@@ -20,9 +20,12 @@ class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
         token['username'] = user.username
         token['email'] = user.email
         token['bio'] = user.profile.bio
-        token['image'] = str(user.profile.image)        # ...
+        if user.profile.image:
+            token['image'] = user.profile.image.url
+        else:
+            token['image'] = None
 
-        return token
+        return token        # ...
     
 class MyTokenObtainPairView(TokenObtainPairView):
     serializer_class = MyTokenObtainPairSerializer
