@@ -7,6 +7,7 @@ from rest_framework import generics
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from .serializers import RegisterSerializer, ProfileSerializer
 from rest_framework import status
+from rest_framework.authentication import TokenAuthentication
 from rest_framework.views import APIView
 
 
@@ -16,10 +17,6 @@ class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
         token = super().get_token(user)
         token['username'] = user.username
         token['email'] = user.email
-        if user.profile.image:
-            token['image'] = user.profile.image.url
-        else:
-            token['image'] = None
 
         return token        # ...
     
@@ -51,23 +48,20 @@ def testEndPoint(request):
         data = f'Congratulation your API just responded to POST request with text: {text}'
         return Response({'response': data}, status=status.HTTP_200_OK)
     return Response({}, status.HTTP_400_BAD_REQUEST)
-
-class Profiles(APIView):
-    def get_object(self, id):
-        try:
-            return Profile.objects.get(id=id)
-        except Profile.DoesNotExist:
-            return Response(status=status.HTTP_404_NOT_FOUND)
-
-    def get(self, request, id):
-        user = self.get_object(id)
-        serializers = ProfileSerializer(user)
-        return Response(serializers.data)
     
-    def put(self, request, id):
-        user = self.get_object(id)
-        serializer = ProfileSerializer(user, data=request.data, partial=True)  # Use partial=True
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+@api_view(['GET','PUT'])
+@permission_classes([IsAuthenticated])
+def profile(request):
+        if request.method == "GET":
+            user = request.user
+            profile = Profile.objects.get(user=user)
+            serializer = ProfileSerializer(profile) 
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        elif request.method == "PUT":
+            user = request.user
+            profile = Profile.objects.get(user=user)
+            serializer = ProfileSerializer(profile, data=request.data, partial=True)  
+            if serializer.is_valid():
+                serializer.save()
+                return Response(serializer.data)
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
