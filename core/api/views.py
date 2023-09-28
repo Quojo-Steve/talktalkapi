@@ -65,3 +65,12 @@ def profile(request):
                 serializer.save()
                 return Response(serializer.data)
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def everyone(request):
+    user = request.user
+    people = Profile.objects.exclude(user=user)
+    serializer = ProfileSerializer(people, many=True)
+    return Response(serializer.data, status=status.HTTP_200_OK)
