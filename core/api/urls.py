@@ -12,5 +12,6 @@ urlpatterns = [
     path('register/', views.RegisterView.as_view(), name='auth_register'),
     path('test/', views.testEndPoint, name='test'),
     path('profile/', views.profile, name='profiles'),
-    path('friends/', views.everyone, name='friends')
+    path('friends/', views.everyone, name='friends'),
+    path('person/<int:id>/', views.person, name='person'),
 ]

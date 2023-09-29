@@ -5,7 +5,7 @@ from rest_framework_simplejwt.views import TokenObtainPairView
 from core.models import User, Profile
 from rest_framework import generics
 from rest_framework.permissions import AllowAny, IsAuthenticated
-from .serializers import RegisterSerializer, ProfileSerializer
+from .serializers import RegisterSerializer, ProfileSerializer, UserSerializer
 from rest_framework import status
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.views import APIView
@@ -72,5 +72,36 @@ def profile(request):
 def everyone(request):
     user = request.user
     people = Profile.objects.exclude(user=user)
-    serializer = ProfileSerializer(people, many=True)
-    return Response(serializer.data, status=status.HTTP_200_OK)
+    
+    # Serialize both the Profile and User data
+    profile_serializer = ProfileSerializer(people, many=True)
+    user_serializer = UserSerializer(User.objects.filter(id__in=people.values('user_id')), many=True)  # Serialize User data
+    
+    # Combine the serialized data
+    combined_data = []
+    for profile_data, user_data in zip(profile_serializer.data, user_serializer.data):
+        combined_data.append({**profile_data, 'user': user_data})
+    
+    return Response(combined_data, status=status.HTTP_200_OK)
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def person(request, id):
+    try:
+        pers = Profile.objects.get(id=id)
+        profile_serializer = ProfileSerializer(pers)
+        
+        # Get the corresponding User object
+        user = pers.user
+        user_serializer = UserSerializer(user)
+        
+        # Create a dictionary with both sets of data
+        combined_data = {
+            'profile': profile_serializer.data,
+            'user': user_serializer.data
+        }
+        
+        return Response(combined_data, status=status.HTTP_200_OK)
+    except Profile.DoesNotExist:
+        return Response({'error': 'Profile not found'}, status=status.HTTP_404_NOT_FOUND)
