@@ -14,4 +14,5 @@ urlpatterns = [
     path('profile/', views.profile, name='profiles'),
     path('friends/', views.everyone, name='friends'),
     path('person/<int:id>/', views.person, name='person'),
+    path('sendmessage/<int:id>/', views.message, name="message"),
 ]

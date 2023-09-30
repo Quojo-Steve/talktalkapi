@@ -1,4 +1,4 @@
-from core.models import User, Profile
+from core.models import User, Profile, Message
 from django.contrib.auth.password_validation import validate_password
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from rest_framework import serializers
@@ -43,5 +43,9 @@ class ProfileSerializer(serializers.ModelSerializer):
         model = Profile
         fields = '__all__'
 
-    # full_name = serializers.CharField(required=False)
-    # bio = serializers.CharField(required=False)
+
+class MessageSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Message
+        fields = '__all__'
+
